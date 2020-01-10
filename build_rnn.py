@@ -1,4 +1,5 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 class AFD_RNN(object):
 
@@ -17,13 +18,17 @@ class AFD_RNN(object):
             self.batch_size = int(net_config['batch_size'])
         else:
             self.batch_size = test_batch_size
+        print(self.batch_size)
 
     def build_net_graph(self):
         self.input_tensor = tf.placeholder(tf.float32, [None, self.time_step, self.senor_data_num])
 
         # 创建输出层
         input_x = tf.reshape(self.input_tensor, [-1, self.senor_data_num])
+        print(1111111111111111111111111111)
+        print(input_x)
         weights_x = self._get_variable_weights([self.senor_data_num, self.num_units], 'input_weights')
+
         biases_x = self._get_variable_biases([self.num_units], 'input_biases')
 
         x_output = tf.reshape(tf.add(tf.matmul(input_x, weights_x), biases_x),
@@ -31,7 +36,9 @@ class AFD_RNN(object):
 
         # 创建rnn
         x_output = tf.unstack(x_output, axis=1)
+
         lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(self.num_units)
+
         self.cell_state = lstm_cell.zero_state(self.batch_size, dtype=tf.float32)
 
         # outputs shape =[batch_size, max_time, cell_state_size]
@@ -39,8 +46,10 @@ class AFD_RNN(object):
         cell_outputs, final_state = tf.nn.static_rnn(lstm_cell,
                                                      x_output,
                                                      initial_state=self.cell_state)
+
         # 创建网路输出层
         outputs = tf.reshape(cell_outputs, [-1, self.num_units])
+
         weights_outputs = self._get_variable_weights([self.num_units, self.class_num], 'outputs_weights')
         biases_outputs = self._get_variable_biases([self.class_num], 'outputs_biases')
 

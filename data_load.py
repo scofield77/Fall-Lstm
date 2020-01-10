@@ -22,8 +22,11 @@ class DataLoad(object):
         for f in self._data_file_list:
             # 读取所有csv文件
             if 'csv' in f:
+                print("读取"+f)
                 data = pd.read_csv(f, index_col=False)
                 self._all_data = self._all_data.append(data)
+
+
 
     def get_batch(self, batchsize, start_list=None):
         data_size = len(self._all_data.acc_x.values)
@@ -46,6 +49,7 @@ class DataLoad(object):
 
             for s in range(self._extract_data_size):
                 j = self._all_data.iloc[start_pos[i] + s:start_pos[i] + s + 1, 6].values[0]
+                print(s+j)
                 label[s][j] = 1
             label_y.append(label)
 
@@ -64,7 +68,10 @@ class DataLoad(object):
 
 
 if __name__ == '__main__':
-    data = DataLoad('./dataset/train/', time_step=150, class_num=11)
+    print("110")
+    data = DataLoad('./dataset/kalman/', time_step=150, class_num=11)
+    print("11111")
+    print(data)
     x, y = data.get_batch(50)
     print(x.shape)
     print(y.shape)
