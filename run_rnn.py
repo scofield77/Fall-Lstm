@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 import time
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 from matplotlib import pyplot as plt
 from build_rnn import AFD_RNN
 from data_load import DataLoad
@@ -21,6 +22,7 @@ class Run_AFD_RNN(object):
             raise FileExistsError(str(mode_dir, '没有模型可以加载'))
 
         net_config = parser_cfg_file('./config/rnn_net.cfg')
+
         self.rnn_net = AFD_RNN(net_config, batch_size, time_step)
         predict = self.rnn_net.build_net_graph()
         self._predict_tensor = tf.argmax(predict, axis=2)
@@ -50,34 +52,43 @@ class Run_AFD_RNN(object):
         ay = [0 for _ in range(150)]
         az = [0 for _ in range(150)]
 
+        sum = 0
         run_step = 10
         num = int(data_size / run_step)
+        print(num)
 
         start_time = time.time()
 
-        plt.axis([0, 151, -20, 20])
-        plt.ion()
+        #plt.axis([0, 151, -20, 20])
+        #plt.ion()
         for i in range(num):
+
             if i > int(time_step/run_step):
                 predict = run.run(test_data[i * run_step - time_step: i * run_step, :])
                 title = 'correct:' + Label[test_label[i * run_step]] + '     predict:' + Label[predict[int(time_step - 1)][0]]
+                print(Label[test_label[i * run_step]])
+                print(Label[predict[int(time_step - 1)][0]])
+                if Label[test_label[i * run_step]] is Label[predict[int(time_step - 1)][0]]:
+                    sum=sum+1
             else:
                 title = 'correct:' + Label[test_label[i * run_step]] + '     predict:' + 'unknow'
+
 
             self._update_show_data(ax, run_step, test_data[i * run_step:i * run_step + run_step, 0])
             self._update_show_data(ay, run_step, test_data[i * run_step:i * run_step + run_step, 1])
             self._update_show_data(az, run_step, test_data[i * run_step:i * run_step + run_step, 2])
 
-            plt.cla()
-            plt.plot(x, ax)
-            plt.plot(x, ay)
-            plt.plot(x, az)
-
-            plt.title(title)
-            plt.draw()
-            plt.pause(0.001)
+            # plt.cla()
+            # plt.plot(x, ax)
+            # plt.plot(x, ay)
+            # plt.plot(x, az)
+            #
+            # plt.title(title)
+            # plt.draw()
+            # plt.pause(0.001)
 
         during = str(time.time() - start_time)
+        print(sum/num)
         print('检测耗时=', during)
 
 if __name__ == '__main__':
@@ -86,7 +97,7 @@ if __name__ == '__main__':
     class_num = int(net_config['class_num'])
 
     run = Run_AFD_RNN('./model/', time_step=time_step)
-    data_load = DataLoad('./dataset/test/', time_step=time_step, class_num=class_num)
+    data_load = DataLoad('./dataset/test/FKL/', time_step=time_step, class_num=class_num)
 
     test_data, test_label = data_load.get_test_data()
     run.draw_flow(test_data, test_label)
